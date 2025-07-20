@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fine operazione</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;500;700&display=swap');
+
+        :root {
+            --osu-pink: #ff69b4;
+            --osu-blue: #6495ed;
+            --osu-bg: #1a1a1e;
+            --text-color: #ffffff;
+            --shadow-color: rgba(255, 105, 180, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--osu-bg);
+            color: var(--text-color);
+            overflow: hidden;
+            /* Opacità dello sfondo ridotta (da 0.15 a 0.1) */
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(100, 149, 237, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(255, 105, 180, 0.1) 0%, transparent 40%);
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: container-fade-in 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s forwards;
+        }
+
+        @keyframes container-fade-in {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Stile Hit Circle di osu! */
+        .hit-circle-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 40px;
+        }
+
+        .hit-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--osu-pink);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px var(--shadow-color), 0 0 40px var(--shadow-color);
+            transform: scale(0);
+            animation: circle-pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s forwards,
+                         circle-pulse 2s infinite 1.5s;
+        }
+
+        .approach-circle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--text-color);
+            box-sizing: border-box;
+            transform: scale(2.5);
+            opacity: 0;
+            animation: approach-shrink 1s ease-out 0.8s forwards;
+        }
+
+        @keyframes circle-pop-in {
+            to { transform: scale(1); }
+        }
+
+        @keyframes approach-shrink {
+            0% {
+                transform: scale(2.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes circle-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--shadow-color), 0 0 40px var(--shadow-color); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px var(--shadow-color), 0 0 60px var(--shadow-color); }
+        }
+
+        /* Icona di spunta */
+        .checkmark {
+            stroke: var(--text-color);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: draw-checkmark 0.5s ease-out 1.8s forwards;
+        }
+
+        @keyframes draw-checkmark {
+            to { stroke-dashoffset: 0; }
+        }
+        
+        /* Testo */
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--shadow-color);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: text-fade-in 0.8s ease 2s forwards;
+        }
+
+        p {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #ccc;
+            margin-top: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: text-fade-in 0.8s ease 2.2s forwards;
+        }
+
+        @keyframes text-fade-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Particelle di sfondo */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        <div class="hit-circle-container">
+            <div class="approach-circle"></div>
+            <div class="hit-circle">
+                <svg width="60" height="60" viewBox="0 0 100 100">
+                    <polyline class="checkmark" points="20,50 45,75 80,25" fill="none" />
+                </svg>
+            </div>
+        </div>
+        <h1>Torna su Discord</h1>
+        <p>Puoi chiudere questa finestra.</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const colors = ["#ff69b4", "#6495ed", "#ffffff"];
+
+        function createParticle() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 2 + 1; // Dimensioni ridotte
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const speedX = Math.random() * 0.6 - 0.3; // Velocità ridotta
+            const speedY = Math.random() * 0.6 - 0.3; // Velocità ridotta
+            particles.push({ x, y, size, color, speedX, speedY });
+        }
+
+        // Numero di particelle ridotto (da 50 a 20)
+        const particleCount = 20;
+        for (let i = 0; i < particleCount; i++) {
+            createParticle();
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.speedX;
+                p.y += p.speedY;
+                
+                if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                createParticle();
+            }
+        });
+    </script>
+
+</body>
+</html>
